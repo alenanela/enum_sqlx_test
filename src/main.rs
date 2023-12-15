@@ -3,11 +3,6 @@
 #[sqlx(type_name = "measure_unit")]
 enum MeasureUnit {
     g,
-    kj,
-    mg,
-    mg_gn,
-    pt,
-    ug,
 }
 
 #[tokio::main]
@@ -15,7 +10,6 @@ async fn main() -> sqlx::Result<()> {
 
     dotenv::dotenv().ok();
     let db = sqlx::PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await?;
-    let mut tnx = db.begin().await?;
 
     sqlx::query(
         "
@@ -24,7 +18,7 @@ async fn main() -> sqlx::Result<()> {
         ")
         .bind(MeasureUnit::g)
         .bind("Protein")
-        .execute(&mut *tnx)
+        .execute(&db)
         .await?;
 
 
@@ -37,10 +31,9 @@ async fn main() -> sqlx::Result<()> {
         MeasureUnit::g,
         "Protein"
     )
-    .fetch_one(&mut *tnx)
+    .fetch_one(db)
     .await?
     .id;   
 
-    tnx.rollback().await?;
     Ok(())
 }
